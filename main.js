@@ -5,14 +5,83 @@ var main = (function() {
 
 
   function NetTrap() {
-    // put any properties we need here
-    this.no_device = false;
-    this.net_disarmed = true;
+    this.no_device = true;
+    this.net_disarmed = false;
     this.net_dropped = false;
+    this.net_dropped_characteristic = null;
+    this.net_disarmed_characteristic = null;
+  };
+
+
+  NetTrap.prototype.dummy = function() {
+    console.log("called dummy function!");
+  }
+  // these guys should be DRYed up
+  NetTrap.prototype.armTrap = function() {
+    if (!this.net_disarmed_characteristic) {
+      console.log("No Net Disarmed Characteristic found");
+      return;
+    }
+    var writeValue = new ArrayBuffer(1);
+    var writeBytes = new Uint8Array(writeValue);
+    writeBytes[0] = 0;
+
+    chrome.bluetoothLowEnergy.writeCharacteristicValue(
+      this.net_disarmed_characteristic.instanceId, writeValue, function() {
+        if (chrome.runtime.lastError) {
+          console.log(chrome.runtime.lastError.message);
+          return;
+        }
+        console.log("Arm trap characteristic written!");
+        this.net_disarmed = false;
+        this.redrawBody();
+      });
+  };
+
+  NetTrap.prototype.disarmTrap = function() {
+    if (!this.net_disarmed_characteristic) {
+      console.log("No Net Disarmed Characteristic found");
+      return;
+    }
+    var writeValue = new ArrayBuffer(1);
+    var writeBytes = new Uint8Array(writeValue);
+    writeBytes[0] = 1;
+
+    chrome.bluetoothLowEnergy.writeCharacteristicValue(
+      this.net_disarmed_characteristic.instanceId, writeValue, function() {
+        if (chrome.runtime.lastError) {
+          console.log(chrome.runtime.lastError.message);
+          return;
+        }
+        console.log("Disarm trap characteristic written!");
+        this.net_disarmed = true;
+        this.redrawBody();
+      });
+  };
+
+  NetTrap.prototype.resetTrap = function() {
+    if (!this.net_dropped_characteristic) {
+      console.log("No Net Dropped Characteristic found");
+      return;
+    }
+    var writeValue = new ArrayBuffer(1);
+    var writeBytes = new Uint8Array(writeValue);
+    writeBytes[0] = 1;
+
+    chrome.bluetoothLowEnergy.writeCharacteristicValue(
+      this.net_dropped_characteristic.instanceId, writeValue, function() {
+        if (chrome.runtime.lastError) {
+          console.log(chrome.runtime.lastError.message);
+          return;
+        }
+        console.log("Reset trap characteristic written!");
+        this.net_dropped = false;
+        this.redrawBody();
+      });
   };
 
   NetTrap.prototype.handleService = function(service) {
-    UI.getInstance.resetState(); // we can be in 3 possible states: no device, trap not sprung, trap sprung
+    this.redrawBody();
     var self = this;
     chrome.bluetoothLowEnergy.getCharacteristics(service.instanceId,
                                                  function (chrcs) {
@@ -78,6 +147,7 @@ var main = (function() {
 
     chrome.bluetooth.onAdapterStateChanged.addListener(updateAdapterState);
 
+    var self = this;
     // Find the trap device
     chrome.bluetooth.getDevices(function (devices) {
       if (chrome.runtime.lastError) {
@@ -99,23 +169,27 @@ var main = (function() {
             services.forEach(function (service) {
               if (service.uuid == NETTRAP_SERVICE_UUID) {
                 console.log('Found NetTrap service!');
-                this.no_device = false;
-                this.handleService(service);
+                self.no_device = false;
+                self.handleService(service);
               }
             });
             // might get rid of this stuff?
-            if (!this.no_device)
+            if (!self.no_device)
               return;
 
             console.log('Found device with NetTrap service: ' + device.address);
           });
         });
       }
+      // now that we (may) have characteristics, attach handlers
+      UI.getInstance().setArmTrapHandler(function() { self.armTrap(); });
+      UI.getInstance().setDisarmTrapHandler(function() { self.disarmTrap(); });
+      UI.getInstance().setResetTrapHandler(function() { self.resetTrap(); });
     });
 
   }; // close init function
   return { NetTrap : NetTrap }; // i don't actually know what this does?
-})(); // main calls itself to set all this stuff up
+})();
 
 document.addEventListener('DOMContentLoaded', function() {
   var nettrap = new main.NetTrap();

@@ -15,7 +15,6 @@ var UI = (function() {
     document.getElementById('trap-disarmed-div').hidden = noDevice || dropped || !disarmed;
   };
 
-// actually using this one now
   UI.prototype.setAdapterState = function(address, name) {
     var addressField = document.getElementById('adapter-address');
     var nameField = document.getElementById('adapter-name');
@@ -27,6 +26,18 @@ var UI = (function() {
 
     setAdapterField(addressField, address ? address : 'unknown');
     setAdapterField(nameField, name ? name : 'Local Adapter');
+  };
+
+  UI.prototype.setArmTrapHandler = function(handler) {
+    document.getElementById('arm-trap').onclick = handler;
+  };
+
+  UI.prototype.setDisarmTrapHandler = function(handler) {
+    document.getElementById('disarm-trap').onclick = handler;
+  };
+
+  UI.prototype.setResetTrapHandler = function(handler) {
+    document.getElementById('reset-trap').onclick = handler;
   };
 
   return {
