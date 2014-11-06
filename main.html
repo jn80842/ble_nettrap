@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>NET TRAP</title>
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <script src="ui.js"></script>
+  <script src="main.js"></script>
+</head>
+<body>
+  <div id="header">
+    <img src="maru.png" alt="maru in a box" id="icon">
+    <h1>Net Trap!</h1>
+    <div id="adapter-status">
+      <ul>
+        <li><span id="adapter-name"></span></li>
+        <li><span id="adapter-address"></span></li>
+      </ul>
+    </div>
+
+  </div>
+  <div id="no-devices-error" class="info">
+    You are out of range of your Net Trap.
+  </div>
+  <div id="trap-armed-div" class="info">
+    <p>Your Net Trap is armed!</p>
+    <button id="disarm-trap">Disarm trap</button>
+  </div>
+  <div id="trap-disarmed-div" class="info">
+    <p>Your Net Trap is disarmed</p>
+    <button id="arm-trap">Arm trap</button>
+  </div>
+  <div id="trap-sprung-div" class="info">
+    <p>You caught a burglar!</p>
+    <button id="reset-trap">Okay, net is reset</button>
+  </div>
+</body>
+</html>
